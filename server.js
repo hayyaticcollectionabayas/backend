@@ -71,6 +71,19 @@ app.use(errorHandler);
 
 app.listen(PORT, () => {
   logger.info(`Server running on port ${PORT}`);
+
+  // ── Keep-alive ping (Render free tier sleeps after 15min inactivity) ──────
+  if (process.env.NODE_ENV === 'production') {
+    const SELF_URL = process.env.RENDER_EXTERNAL_URL || `https://backend-am13.onrender.com`;
+    setInterval(async () => {
+      try {
+        await fetch(`${SELF_URL}/api/health`);
+        logger.info('Keep-alive ping sent');
+      } catch {
+        // ignore ping errors
+      }
+    }, 14 * 60 * 1000); // every 14 minutes
+  }
 });
 
 export default app;

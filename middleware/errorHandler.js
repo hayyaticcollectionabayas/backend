@@ -1,14 +1,22 @@
 import logger from '../utils/logger.js';
 
+const ALLOWED_ORIGINS = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://hayyaticcollectionabayas.com',
+  'http://hayyaticcollectionabayas.com',
+  'https://www.hayyaticcollectionabayas.com',
+];
+
 const errorHandler = (err, req, res, _next) => {
   // Re-apply CORS headers so they are never missing on error responses
   const origin = req.headers.origin;
-  if (origin) {
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Vary', 'Origin');
-  } else {
+  } else if (!origin) {
     res.setHeader('Access-Control-Allow-Origin', '*');
   }
+  res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
 
   let statusCode = err.statusCode || 500;

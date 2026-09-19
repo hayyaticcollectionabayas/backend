@@ -20,22 +20,31 @@ connectDB();
 
 app.set('trust proxy', 1);
 
-// ── Single Source of Truth CORS Middleware ────────────────────────────────────
+// ── CORS Middleware ────────────────────────────────────────────────────────────
+const ALLOWED_ORIGINS = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://hayyaticcollectionabayas.com',
+  'http://hayyaticcollectionabayas.com',
+  'https://www.hayyaticcollectionabayas.com',
+];
+
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  if (origin) {
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Vary', 'Origin');
-  } else {
+  } else if (!origin) {
+    // Non-browser requests (Postman, server-to-server)
     res.setHeader('Access-Control-Allow-Origin', '*');
   }
+  res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
   res.setHeader('Access-Control-Max-Age', '86400');
 
   if (req.method === 'OPTIONS') {
-    return res.status(200).send('OK');
+    return res.status(200).end();
   }
   next();
 });

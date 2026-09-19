@@ -26,6 +26,8 @@ app.use((req, res, next) => {
   if (origin) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Vary', 'Origin');
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', '*');
   }
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
@@ -33,7 +35,7 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Max-Age', '86400');
 
   if (req.method === 'OPTIONS') {
-    return res.status(204).end();
+    return res.status(200).send('OK');
   }
   next();
 });

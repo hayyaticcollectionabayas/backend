@@ -1,6 +1,16 @@
 import logger from '../utils/logger.js';
 
 const errorHandler = (err, req, res, _next) => {
+  // Re-apply CORS headers so they are never missing on error responses
+  const origin = req.headers.origin;
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+
   let statusCode = err.statusCode || 500;
   let message = err.message;
 

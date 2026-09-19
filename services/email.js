@@ -1,7 +1,18 @@
 import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
-// Lazy initialization — transporter is created on first use so env vars are available
+// Lazy initialization — transporter and resend client are created on first use so env vars are available
 let _transporter = null;
+let _resend = null;
+
+const getResend = () => {
+  if (_resend) return _resend;
+  const apiKey = process.env.RESEND_API_KEY;
+  if (apiKey) {
+    _resend = new Resend(apiKey);
+  }
+  return _resend;
+};
 
 const getTransporter = () => {
   if (_transporter) return _transporter;
@@ -309,14 +320,44 @@ const orderStatusHtml = (order, reason) => {
 // ─── SEND HELPER ─────────────────────────────────────────────────────────────
 
 const send = async ({ to, subject, html, text }) => {
+  if (!to) {
+    console.warn('[Email Warning] Cannot send email — Missing recipient');
+    return false;
+  }
+
+  // 1. Try Resend if API key is present
+  const resend = getResend();
+  if (resend) {
+    try {
+      const from = process.env.RESEND_FROM || 'Hayyatic Collection <onboarding@resend.dev>';
+      const { data, error } = await resend.emails.send({
+        from,
+        to: Array.isArray(to) ? to : [to],
+        subject,
+        html,
+        text,
+      });
+
+      if (!error && data?.id) {
+        console.log(`[Resend Email Sent ✅] To: ${to} | Subject: "${subject}" | MessageId: ${data.id}`);
+        return true;
+      }
+
+      console.warn(`[Resend Warning ⚠️] Could not deliver to ${to} (${error?.message || JSON.stringify(error)}). Trying Nodemailer fallback...`);
+    } catch (resendErr) {
+      console.warn(`[Resend Exception ⚠️] ${resendErr.message}. Trying Nodemailer fallback...`);
+    }
+  }
+
+  // 2. Fallback to Nodemailer (Gmail SMTP)
   const transporter = getTransporter();
   const smtpUser = getSmtpUser();
   if (!transporter) {
     console.warn('[Email Warning] Cannot send email — Transporter initialization failed');
     return false;
   }
-  if (!to || !smtpUser) {
-    console.warn('[Email Warning] Cannot send email — Missing recipient or sender:', { to, smtpUser });
+  if (!smtpUser) {
+    console.warn('[Email Warning] Cannot send email — Missing sender:', { to, smtpUser });
     return false;
   }
   try {
@@ -327,7 +368,7 @@ const send = async ({ to, subject, html, text }) => {
       html,
       text,
     });
-    console.log(`[Email Sent ✅] To: ${to} | Subject: "${subject}" | MessageId: ${info?.messageId}`);
+    console.log(`[SMTP Email Sent ✅] To: ${to} | Subject: "${subject}" | MessageId: ${info?.messageId}`);
     return true;
   } catch (err) {
     console.error(`[Email Error ❌] Failed sending to ${to}:`, err.message);

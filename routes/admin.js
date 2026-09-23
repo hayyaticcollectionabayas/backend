@@ -2,8 +2,8 @@ import { Router } from 'express';
 import multer from 'multer';
 import { authorize, protect } from '../middleware/auth.js';
 import {
-  createProduct, deleteProduct, getDashboard, getSettings,
-  listCategories, listOrders, listProducts, updateOrderStatus, updateSettings, uploadImage,
+  createCategory, createProduct, deleteCategory, deleteProduct, getDashboard, getSettings,
+  listCategories, listOrders, listProducts, updateCategory, updateOrderStatus, updateSettings, uploadImage,
 } from '../controllers/adminController.js';
 
 const router = Router();
@@ -28,6 +28,9 @@ router.delete('/products/:productId', deleteProduct);
 router.get('/orders', listOrders);
 router.patch('/orders/:orderId/status', updateOrderStatus);
 router.get('/categories', listCategories);
+router.post('/categories', createCategory);
+router.patch('/categories/:categoryId', updateCategory);
+router.delete('/categories/:categoryId', deleteCategory);
 router.get('/settings', getSettings);
 router.patch('/settings', updateSettings);
 

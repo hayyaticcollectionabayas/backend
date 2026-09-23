@@ -151,6 +151,80 @@ export const listCategories = async (_req, res, next) => {
   } catch (error) { next(error); }
 };
 
+export const createCategory = async (req, res, next) => {
+  try {
+    const { name, slug, description, image, displayOrder, isActive } = req.body;
+    if (!name?.trim()) {
+      return res.status(400).json({ success: false, message: 'Category name is required.' });
+    }
+
+    const finalSlug = (slug || name)
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)+/g, '');
+
+    const existing = await Category.findOne({ slug: finalSlug });
+    if (existing) {
+      return res.status(400).json({ success: false, message: 'A category with this name or slug already exists.' });
+    }
+
+    const category = await Category.create({
+      name: name.trim(),
+      slug: finalSlug,
+      description: description?.trim() || '',
+      image: image?.trim() || '',
+      displayOrder: displayOrder ? Number(displayOrder) : 0,
+      isActive: isActive !== undefined ? isActive : true,
+    });
+
+    const categoryObj = category.toObject();
+    categoryObj.productCount = 0;
+
+    res.status(201).json({ success: true, category: categoryObj });
+  } catch (error) { next(error); }
+};
+
+export const updateCategory = async (req, res, next) => {
+  try {
+    const { categoryId } = req.params;
+    const { name, slug, description, image, isActive, displayOrder } = req.body;
+
+    const updates = {};
+    if (name !== undefined) updates.name = name.trim();
+    if (slug !== undefined) {
+      updates.slug = slug.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    }
+    if (description !== undefined) updates.description = description.trim();
+    if (image !== undefined) updates.image = image.trim();
+    if (isActive !== undefined) updates.isActive = isActive;
+    if (displayOrder !== undefined) updates.displayOrder = Number(displayOrder);
+
+    const category = await Category.findByIdAndUpdate(categoryId, updates, { new: true, runValidators: true });
+    if (!category) return res.status(404).json({ success: false, message: 'Category not found.' });
+
+    res.json({ success: true, category });
+  } catch (error) { next(error); }
+};
+
+export const deleteCategory = async (req, res, next) => {
+  try {
+    const { categoryId } = req.params;
+    const productCount = await Product.countDocuments({ category: categoryId, isDeleted: false });
+    if (productCount > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot delete category: ${productCount} active product(s) belong to this category. Delete or reassign those products first.`,
+      });
+    }
+
+    const category = await Category.findByIdAndDelete(categoryId);
+    if (!category) return res.status(404).json({ success: false, message: 'Category not found.' });
+
+    res.json({ success: true, message: 'Category removed successfully.' });
+  } catch (error) { next(error); }
+};
+
 export const getSettings = async (_req, res, next) => {
   try { res.json({ success: true, settings: await Settings.getSettings() }); } catch (error) { next(error); }
 };

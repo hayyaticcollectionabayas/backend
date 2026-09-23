@@ -47,5 +47,17 @@ const categorySchema = new mongoose.Schema(
   }
 );
 
+// Pre-save / pre-validate hook: auto-generate slug from name if not provided
+categorySchema.pre('validate', function (next) {
+  if (!this.slug && this.name) {
+    this.slug = this.name
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)+/g, '');
+  }
+  next();
+});
+
 const Category = mongoose.models.Category || mongoose.model('Category', categorySchema);
 export default Category;

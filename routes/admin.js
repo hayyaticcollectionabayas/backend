@@ -3,7 +3,7 @@ import multer from 'multer';
 import { authorize, protect } from '../middleware/auth.js';
 import {
   createCategory, createProduct, deleteCategory, deleteProduct, getDashboard, getSettings,
-  listCategories, listOrders, listProducts, updateCategory, updateOrderStatus, updateSettings, uploadImage,
+  listCategories, listOrders, listProducts, updateCategory, updateOrderStatus, updateProduct, updateSettings, uploadImage,
 } from '../controllers/adminController.js';
 
 const router = Router();
@@ -24,6 +24,7 @@ router.post('/upload', upload.single('image'), uploadImage);
 router.get('/dashboard', getDashboard);
 router.get('/products', listProducts);
 router.post('/products', createProduct);
+router.patch('/products/:productId', updateProduct);
 router.delete('/products/:productId', deleteProduct);
 router.get('/orders', listOrders);
 router.patch('/orders/:orderId/status', updateOrderStatus);

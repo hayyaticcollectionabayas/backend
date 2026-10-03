@@ -106,6 +106,19 @@ export const createProduct = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
+export const updateProduct = async (req, res, next) => {
+  try {
+    const product = await Product.findByIdAndUpdate(
+      req.params.productId,
+      { $set: req.body },
+      { new: true, runValidators: true }
+    ).populate('category', 'name slug');
+
+    if (!product) return res.status(404).json({ success: false, message: 'Product not found.' });
+    res.json({ success: true, product });
+  } catch (error) { next(error); }
+};
+
 export const deleteProduct = async (req, res, next) => {
   try {
     const product = await Product.findByIdAndUpdate(req.params.productId, { isDeleted: true, isActive: false }, { new: true });

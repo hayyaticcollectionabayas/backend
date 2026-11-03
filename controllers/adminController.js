@@ -238,6 +238,19 @@ export const deleteCategory = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
+export const deleteOrder = async (req, res, next) => {
+  try {
+    const { orderId } = req.params;
+    const order = await Order.findByIdAndDelete(orderId);
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found.' });
+    }
+    res.json({ success: true, message: 'Order deleted successfully.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getSettings = async (_req, res, next) => {
   try { res.json({ success: true, settings: await Settings.getSettings() }); } catch (error) { next(error); }
 };

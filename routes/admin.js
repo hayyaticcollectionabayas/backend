@@ -2,7 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import { authorize, protect } from '../middleware/auth.js';
 import {
-  createCategory, createProduct, deleteCategory, deleteProduct, getDashboard, getSettings,
+  createCategory, createProduct, deleteCategory, deleteProduct, deleteOrder, getDashboard, getSettings,
   listCategories, listOrders, listProducts, updateCategory, updateOrderStatus, updateProduct, updateSettings, uploadImage,
 } from '../controllers/adminController.js';
 
@@ -28,6 +28,7 @@ router.patch('/products/:productId', updateProduct);
 router.delete('/products/:productId', deleteProduct);
 router.get('/orders', listOrders);
 router.patch('/orders/:orderId/status', updateOrderStatus);
+router.delete('/orders/:orderId', deleteOrder);
 router.get('/categories', listCategories);
 router.post('/categories', createCategory);
 router.patch('/categories/:categoryId', updateCategory);
